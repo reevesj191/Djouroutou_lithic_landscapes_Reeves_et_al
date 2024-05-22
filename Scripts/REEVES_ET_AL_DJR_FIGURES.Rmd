@@ -1,0 +1,379 @@
+---
+title: "Djouroutou Figures "
+author: "Jonathan S. Reeves"
+date: "2024-05-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(car)
+library(MASS)
+library(performance)
+library(ggplot2,verbose = FALSE)
+library(ggnewscale)
+library(dplyr,verbose = FALSE)
+library(tidyr)
+library(terra)
+library(raster, verbose = FALSE)
+library(sf)
+library(tidyterra)
+library(ggspatial)
+library(ggpubr)
+
+load("../../../0_GIT_HUB/Djouroutou_lithic_landscapes_Reeves_et_al/Data/DJR_Workspace.Rdata")
+
+```
+
+
+
+#Figure 1
+
+SEE PUBLICATION
+
+#Figure 2
+
+SEE PUBLICATION
+
+#Figure 3
+
+##A
+```{r Figure 3a , fig.height=6, fig.width=12, include= TRUE}
+
+nut_colors <- c("#C41212","#30424D", "#7D6161", "#D1C700")
+
+
+Fig3a <- base +
+  new_scale_fill()+
+  geom_sf(data = ntrees,
+          aes(fill = species, shape = species), 
+          shape = 21,
+          size = 3.5,
+          show.legend = FALSE, 
+          inherit.aes = FALSE)+
+  scale_fill_manual(values=nut_colors,
+                    name = "Nut Species")+ 
+  annotation_scale(location = "br", 
+                   pad_x = unit(0.65, "cm"),
+                   pad_y = unit(0.75, "cm"))+
+  annotation_north_arrow(location = "br", 
+                   pad_x = unit(0.7, "cm"),
+                   pad_y = unit(1.2, "cm"),
+                   style = north_arrow_orienteering())+
+  annotate("text", x = 697000,y = 601000, label = "A.", size = 10)+
+  theme_minimal() + 
+  theme(legend.position = c(.84, .77),
+        legend.key.height = unit(.5, 'cm'), 
+        legend.background = element_rect(color = "black", fill = alpha("white", .75)),
+        axis.title = element_blank(),
+        axis.text = element_blank(), 
+        panel.grid = element_blank(),
+        panel.border = element_rect(fill =NA))
+
+
+```
+
+##B
+
+```{r}
+Fig3b <- base + 
+  guides(fill="none")+
+  new_scale_fill()+
+  geom_sf(data = ntrees,
+          aes(fill = species, shape = species),
+          alpha = 0,
+          shape = 21,
+          size = 3.5,
+          show.legend = FALSE, 
+          inherit.aes = FALSE)+
+  stat_ellipse(data = ntrees,
+               aes(x=X, y=Y,fill = species), 
+               color = "black",
+               alpha = .70 , 
+               level = .65, 
+               geom = "polygon", 
+               type = 'norm',
+               inherit.aes = FALSE) +
+  scale_color_manual(values = nut_colors) +
+  scale_fill_manual(values=nut_colors,
+                    name = "Nut Species",
+                    labels = c("Coula",
+                               "Panda",
+                               "Parinari",
+                               "Saccoglotis"))+ 
+  annotation_scale(location = "br", 
+                   pad_x = unit(0.65, "cm"),
+                   pad_y = unit(0.75, "cm"))+
+  annotation_north_arrow(location = "br", 
+                   pad_x = unit(0.7, "cm"),
+                   pad_y = unit(1.2, "cm"),
+                   style = north_arrow_orienteering())+
+  annotate("text", x = 697000,y = 601000, label = "B.", size = 10)+
+  theme_minimal() + 
+  theme(legend.position = c(.80, .80),
+        legend.key.height = unit(.5, 'cm'), 
+        legend.background = element_rect(color = "black", fill = alpha("white", .75)),
+        axis.title = element_blank(),
+        axis.text = element_blank(), 
+        panel.grid = element_blank(),
+        panel.border = element_rect(fill =NA))
+
+```
+
+##C
+
+```{r Fig3.C}
+
+#extract Z values from DEM 
+
+Fig3c <- ggplot(ntrees, aes(x = species, y = z)) + 
+  geom_boxplot(aes(fill = species), show.legend = FALSE) +
+  labs(x= "Species", y= "Elevation (m)") + 
+  scale_fill_manual(values = nut_colors) + 
+  annotate("text", x = .65,y = 181.25, label = "C.", size = 10)+
+  theme(panel.border = element_rect(fill = NA,color = "black"),
+  panel.background = element_blank())
+
+```
+
+### Final Fig 3
+```{r Final Fig3, fig.height= 7, fig.width= 14}
+
+fig3 <- egg::ggarrange(Fig3a, Fig3b,Fig3c, ncol = 3)
+fig3
+```
+
+
+
+# Figure 4
+
+```{r}
+djr_rbh_sum <- djr_rbh %>%
+  group_by(Material) %>%
+  summarise(min = round(min(Hardness_Value),2),
+            mean = round(mean(Hardness_Value), 2),
+            max = round(max(Hardness_Value), 2),
+            sd = round(sd(Hardness_Value),2))
+
+
+rock_colors <- rock_colors <- c("#F2F2F2", "#7B6823","#212A33", "#535353")
+djr_rbh$Material <- factor(djr_rbh$Material,
+                           levels = c("Quartz", "Diorite", "Granite"))  
+
+Fig4 <- ggplot(djr_rbh, aes(x = Material, y = Hardness_Value)) + 
+  geom_boxplot(aes(fill = Material), show.legend = FALSE) + 
+  labs(x = "Rock Type", y = "Rebound Hardness") + 
+  scale_fill_manual(values = rock_colors)+
+  theme(panel.background = element_rect(fill = NA, colour = "black"))
+```
+
+# Figure 5
+
+## A
+```{r fig5, fig.height=5,fig.width=5}
+
+
+
+rock_colors <- c("#F2F2F2", "#7B6823","#212A33", "#535353")
+
+Fig5a <- base + 
+  new_scale_fill()+
+  geom_sf(data = qplots_djr_agg,
+          aes(fill = stone_material_recovered, size = n_stone, shape = stone_material_recovered),
+          color = "black",
+          alpha = .75, 
+          inherit.aes = FALSE) + 
+  scale_shape_manual(values = c(21,22,23,24)) +
+  scale_fill_manual(values = rock_colors, guide = "none")+
+  scale_size(range = c(4,8),
+             breaks = c(1,3,5,7)) +
+  labs(size = "N stones",
+       shape = "Rock Type")+
+  scale_y_continuous(limits = c(596400-300, 599268 + 700))+
+  scale_x_continuous(limits = c(697046-100, 700829 + 300))+
+  annotate("text", x = 697225,y = 599750, label = "A.", size = 10)+
+  theme_minimal() + 
+  theme(legend.position = "none",
+        legend.direction = "vertical",
+        legend.box = "horizontal",
+        legend.key.height = unit(.5, 'cm'), 
+        legend.background = element_rect(color = "black",
+                                         fill = alpha("white", .75)),
+        axis.title = element_blank(),
+        axis.text = element_blank(), 
+        panel.grid = element_blank(),
+        panel.border = element_rect(fill =NA))
+
+
+Fig5a_leg <- as_ggplot(get_legend(Fig5a + theme(legend.position = "top")))
+```
+
+## B
+
+```{r}
+
+
+Fig5b <- base +
+  guides(fill="none")+
+  geom_point(data = assemblages, aes(x = Easting, y = Northing, size = n_stone_no_anvil, shape = stone_anvil_present, color = primary_rm), inherit.aes = FALSE) +
+  scale_color_manual(values = rock_colors) + 
+  scale_size(range = c(2,8)) +
+  coord_equal()+
+  labs(color = "Primary RM",
+       shape = "Stone Anvil",
+       size = "N Stones")+
+  scale_y_continuous(limits = c(596400-300, 599268 + 700))+
+  scale_x_continuous(limits = c(697046-100, 700829 + 300))+
+  annotate("text", x = 697225,y = 599750, label = "B.", size = 10)+
+  annotation_scale(location = "br", 
+                   pad_x = unit(0.75, "cm"),
+                   pad_y = unit(0.8, "cm"))+
+  annotation_north_arrow(location = "br", 
+                   pad_x = unit(0.80, "cm"),
+                   pad_y = unit(1.25, "cm"),
+                   style = north_arrow_orienteering())+
+  theme_minimal() + 
+  theme(legend.position = "none",
+        legend.direction = "vertical",
+        legend.box = "horizontal",
+        legend.key.height = unit(.5, 'cm'), 
+        legend.background = element_rect(color = "black",
+                                         fill = alpha("white", .75)),
+        axis.title = element_blank(),
+        axis.text = element_blank(), 
+        panel.grid = element_blank(),
+        panel.border = element_rect(fill =NA))
+
+Fig5b_leg <- as_ggplot(get_legend(Fig5b + theme(legend.position = "top")))
+
+```
+
+## C
+
+```{r fig5}
+
+Fig5c <- base+
+  guides(fill="none")+
+  geom_point(data = assemblages, aes(x = Easting, y = Northing, size = n_hammer), inherit.aes = FALSE) +
+  scale_color_manual(values = rock_colors) + 
+  coord_equal()+
+  labs(size = "N Hammers") + 
+  scale_y_continuous(limits = c(596400-300, 599268 + 700))+
+  scale_x_continuous(limits = c(697046-100, 700829 + 300))+
+  annotate("text", x = 697225,y = 599750, label = "C.", size = 10)+
+  annotation_scale(location = "br", 
+                   pad_x = unit(0.75, "cm"),
+                   pad_y = unit(0.8, "cm"))+
+  annotation_north_arrow(location = "br", 
+                   pad_x = unit(0.80, "cm"),
+                   pad_y = unit(1.25, "cm"),
+                   style = north_arrow_orienteering())+
+  theme_minimal() + 
+  theme(legend.position = "none",
+        legend.direction = "vertical",
+        legend.box = "horizontal",
+        legend.key.height = unit(.5, 'cm'), 
+        legend.background = element_rect(color = "black",
+                                         fill = alpha("white", .75)),
+        axis.title = element_blank(),
+        axis.text = element_blank(), 
+        panel.grid = element_blank(),
+        panel.border = element_rect(fill =NA))
+
+
+Fig5c_leg <- as_ggplot(get_legend(Fig5c + theme(legend.position = "left"), position = "left"))
+
+```
+
+## Figure 5
+
+```{r, fig.height=14, fig.width=28}
+
+fig.5 <- egg::ggarrange(Fig5a,Fig5b,Fig5c,
+                        Fig5a_leg,Fig5b_leg,Fig5c_leg, ncol = 3, nrow=2)
+
+
+```
+
+```{r, fig.height=4, fig.width=12}
+
+a <- ggplot(xdata, 
+            aes(x = SPECIES, y = n_stone_no_anvil)) + 
+  geom_boxplot()+
+  ggtitle(label = "A.") + 
+  labs(x="Species", y= "Number of Stones") + 
+  theme(panel.background = element_rect(fill = NA, colour = "black"))
+
+b <- ggplot(xdata, aes(x = primary_rm, y = n_stone_no_anvil)) + 
+  geom_boxplot() + 
+  ggtitle(label = "B.") + 
+  labs(x="Primary Raw Material", y= "Number of Stones") +
+  theme(panel.background = element_rect(fill = NA, colour = "black"))
+
+c <- ggplot(xdata, aes(x = stone_anvil_present, y = n_stone_no_anvil)) + 
+  geom_boxplot() + 
+  ggtitle(label = "C.") + 
+  labs(x="Stone Anvil Present", y= "Number of Stones") +
+  theme(panel.background = element_rect(fill = NA, colour = "black"))
+
+fig.6 = egg::ggarrange(a,b,c, ncol = 3)
+```
+
+```{r, fig.height=4, fig.width=12}
+
+ylab <- "Number of Hammers"
+
+a <- ggplot(xdata[!is.na(xdata$SPECIES),], 
+            aes(x = SPECIES, y = n_hammer)) + 
+  geom_boxplot() + 
+  ggtitle(label = "A.") + 
+  labs(x="Species", y= "Number of Hammers") + 
+  theme(panel.background = element_rect(fill = NA, colour = "black"))
+
+b <- ggplot(xdata[!is.na(xdata$primary_rm),], aes(x = primary_rm, y = n_hammer)) + 
+  geom_boxplot() + 
+  ggtitle(label = "B.") + 
+    labs(x="Primary Raw Material", y= "Number of Hammers") + 
+  theme(panel.background = element_rect(fill = NA, colour = "black"))
+
+c <- ggplot(xdata, aes(x = stone_anvil_present, y = n_hammer)) + 
+  geom_boxplot() + 
+  ggtitle(label = "C.") + 
+  labs(x="Stone Anvil Present", y= "Number of Hammers") + 
+  theme(panel.background = element_rect(fill = NA, colour = "black"))
+  
+
+fig.7 <- egg::ggarrange(a,b,c, ncol = 3)
+
+```
+
+```{r,  fig.height=4, fig.width=12}
+
+a <- ggplot(xdata[!is.na(xdata$SPECIES),], 
+            aes(x = SPECIES, y = as.numeric(max_weight))) + 
+  geom_boxplot() + 
+  ggtitle(label = "A.") + 
+  labs(x="Species", y= "Max Weight") + 
+  theme(panel.background = element_rect(fill = NA, colour = "black"))
+  
+
+b <- ggplot(xdata[!is.na(xdata$primary_rm),], aes(x = primary_rm, y = max_weight)) +
+  geom_boxplot() + 
+  ggtitle(label = "B.") + 
+  labs(x="Primary Material", y= "Max Weight") + 
+  theme(panel.background = element_rect(fill = NA, colour = "black"))
+
+
+c <- ggplot(xdata, aes(x = stone_anvil_present, y = as.numeric(max_weight))) +
+  geom_boxplot() +
+  ggtitle(label = "C.") + 
+  labs(x="Stone Anvil Present", y= "Max Weight") + 
+  theme(panel.background = element_rect(fill = NA, colour = "black"))
+
+fig.8 = egg::ggarrange(a,b,c, ncol = 3)
+
+```
+
+
+
+
