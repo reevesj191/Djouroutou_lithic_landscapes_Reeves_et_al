@@ -18,7 +18,7 @@
 
 
 source("3. Analysis/Scripts/diagnostic_fcns.r")
-load("Djouroutou_lithic_landscapes_Reeves_et_al/Data/DJR_Workspace.Rdata")
+load("0_GIT_HUB/Djouroutou_lithic_landscapes_Reeves_et_al/Data/DJR_Workspace.Rdata")
 xdata <- xdata[!(xdata$Square %in% c("PrQL-42")),] # This site is excluded as it is only represented by a single anvil
 
 #xdata <- xdata[!(xdata$Square %in% c( "PPD-49", "CDN-24", "CDD-45")),] 
@@ -26,6 +26,8 @@ xdata <- xdata[!(xdata$Square %in% c("PrQL-42")),] # This site is excluded as it
 full_model <- glm(formula= max_weight~SPECIES + primary_rm + stone_anvil_present, 
                   family = "gaussian", data = xdata)
 
+
+# Checking for colinearity
 
 xx <- lm(max_weight~SPECIES + primary_rm + stone_anvil_present, data = xdata)
 vif(xx)
@@ -48,7 +50,7 @@ cbind(coefficients(full_model), coefficients(full_model)+
 ### Full-Null model comparison
 
 
-null <- glm(formula = max_weight~1, family = "gaussian", data = xdata[xdata$Square != "PrQL-42",])
+null <- glm(formula = max_weight~1, family = "gaussian", data = xdata)
 
 fn_res <- anova(null, full_model, test = "Chisq")
 fn_res
